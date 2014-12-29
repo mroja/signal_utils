@@ -5,13 +5,9 @@ from __future__ import print_function, division
 import numpy as np
 import collections
 import sys, os
-from operator import itemgetter
 import matplotlib.pyplot as py
 import matplotlib.gridspec as gridspec
-import pandas as pd
-import struct
 from scipy.signal import filtfilt, butter
-from scipy.stats import scoreatpercentile
 
 class BookImporter(object):
 	def __init__(self, book_file):
@@ -142,7 +138,7 @@ class BookImporter(object):
 
 	def _reconstruct_signal(self, atoms):
 		reconstruction = np.zeros(self.epoch_s)
-		for atom in [atom for atom in self.atoms[1] if atom['type']==13]:
+		for atom in [a for a in atoms if a['type']==13]:
 			position  = atom['params']['t']/self.fs
 			width     = atom['params']['scale']/self.fs
 			frequency = atom['params']['f']*self.fs/2
@@ -162,22 +158,22 @@ class BookImporter(object):
 		E = np.zeros((lent, lenf)).T
 		t, f = np.meshgrid(t, f)
 		sigt = np.arange(0, tpr/self.fs, 1/self.fs)
-		for atom in [atom for atom in self.atoms[1] if atom['type']==13]:
+		for atom in [a for a in atoms if a['type']==13]:
 			exp1 = np.exp(-2*(atom['params']['scale']/self.fs)**(-2)*(t-atom['params']['t']/self.fs)**2)
 			exp2 = np.exp(-2*np.pi**2 *(atom['params']['scale']/self.fs)**2*(atom['params']['f']*self.fs/2-f)**2)
 			wigners = ((atom['params']['amplitude']/self.ptspmV)**2 * (2*np.pi)**0.5 * 
 						atom['params']['scale']/self.fs*exp1*exp2)
 			E += atom['params']['modulus']**2 * wigners
-		for atom in [atom for atom in self.atoms[1] if atom['type']==12]:
+		for atom in [a for a in atoms if a['type']==12]:
 			amp =  atom['params']['modulus']**2*(atom['params']['amplitude']/self.ptspmV)**2
 			E[:,int(len(f)*atom['params']['f']/(2*np.pi))] +=  amp
-		for atom in [atom for atom in self.atoms[1] if atom['type']==11]:
+		for atom in [atom for atom in atoms if atom['type']==11]:
 			exp1 = np.exp(-2*(atom['params']['scale']/self.fs)**(-2)*(t-atom['params']['t']/self.fs)**2)
 			exp2 = np.exp(-2*np.pi**2 *(atom['params']['scale']/self.fs)**2*(-f)**2)
 			wigners = ((atom['params']['amplitude']/self.ptspmV)**2 * (2*np.pi)**0.5 * 
 						atom['params']['scale']/self.fs*exp1*exp2)
 			E += atom['params']['modulus']**2 * wigners
-		for atom in [atom for atom in self.atoms[1] if atom['type']==10]:
+		for atom in [atom for atom in atoms if atom['type']==10]:
 			amp =  atom['params']['modulus']**2*(atom['params']['amplitude']/self.ptspmV)**2
 			E[int(lent*atom['params']['t']/tpr)] +=  amp	
 		signal_reconstruction = self._reconstruct_signal(atoms)
@@ -189,13 +185,12 @@ class BookImporter(object):
 		sigt = np.arange(0, tpr/self.fs, 1/self.fs)
 		for nr, chnl in enumerate(self.atoms.keys()):
 			print('calculating...',chnl,'of',len(self.atoms.keys()))
-			t, f, E, sigt_s,signal,signal_reconstruction = self._calculate_map(self.atoms[chnl],self.signals[1][nr],df,dt,f_a = f_a)
+			t, f, E, sigt_s,signal,signal_reconstruction = self._calculate_map(self.atoms[chnl],self.signals[1][nr],df,dt,f_a=f_a)
 			try:
 				signal_a += signal
 				E_a += E
 				signal_reconstruction_a += signal_reconstruction
 			except Exception as a:
-				# print(a)
 				signal_a = signal
 				E_a = E
 				signal_reconstruction_a = signal_reconstruction
@@ -214,10 +209,10 @@ class BookImporter(object):
 			ax1.contour(t, f, E_a)
 		else:
 			# ax1.pcolor(t, f, E_a)
-			ax1.imshow(E_a,aspect='auto',origin='lower',extent=(t[0,0],t[-1,-1],f[0,0],f[-1,-1]))
+			ax1.imshow(np.log(E_a+1),aspect='auto',origin='lower',extent=(t[0,0],t[-1,-1],f[0,0],f[-1,-1]))
 		ax2 = fig.add_subplot(gs[1])
 		ax2.plot(sigt, signal_a,'red')
 		ax2.plot(sigt, signal_recontruction_a,'blue')
-		ax2.axvline(x=0,color='r')
+		ax2.axvline(x=4,color='r')
 		ax2.set_ylabel(u'Amplituda [$\\mu$V]')
 		ax2.set_xlabel(u'Czas [s]')
