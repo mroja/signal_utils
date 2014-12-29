@@ -126,7 +126,7 @@ class BookImporter(object):
 	def _gabor(self, amplitude, position, scale, afrequency, phase):
 		time = np.linspace(0, self.epoch_s/self.fs, self.epoch_s)
 		width = scale
-		frequency = afrequency*2*np.pi
+		frequency = 2.0 * np.pi * afrequency
 		signal = amplitude*np.exp(-np.pi*((time-position)/width)**2)*np.cos(frequency*(time-position)+phase)
 		return signal
 
@@ -138,7 +138,7 @@ class BookImporter(object):
 
 	def _reconstruct_signal(self, atoms):
 		reconstruction = np.zeros(self.epoch_s)
-		for atom in [a for a in atoms if a['type']==13]:
+		for atom in (a for a in atoms if a['type'] == 13):
 			position  = atom['params']['t']/self.fs
 			width     = atom['params']['scale']/self.fs
 			frequency = atom['params']['f']*self.fs/2
@@ -158,33 +158,43 @@ class BookImporter(object):
 		E = np.zeros((lent, lenf)).T
 		t, f = np.meshgrid(t, f)
 		sigt = np.arange(0, tpr/self.fs, 1/self.fs)
-		for atom in [a for a in atoms if a['type']==13]:
-			exp1 = np.exp(-2*(atom['params']['scale']/self.fs)**(-2)*(t-atom['params']['t']/self.fs)**2)
-			exp2 = np.exp(-2*np.pi**2 *(atom['params']['scale']/self.fs)**2*(atom['params']['f']*self.fs/2-f)**2)
-			wigners = ((atom['params']['amplitude']/self.ptspmV)**2 * (2*np.pi)**0.5 * 
-						atom['params']['scale']/self.fs*exp1*exp2)
-			E += atom['params']['modulus']**2 * wigners
-		for atom in [a for a in atoms if a['type']==12]:
-			amp =  atom['params']['modulus']**2*(atom['params']['amplitude']/self.ptspmV)**2
-			E[:,int(len(f)*atom['params']['f']/(2*np.pi))] +=  amp
-		for atom in [atom for atom in atoms if atom['type']==11]:
-			exp1 = np.exp(-2*(atom['params']['scale']/self.fs)**(-2)*(t-atom['params']['t']/self.fs)**2)
-			exp2 = np.exp(-2*np.pi**2 *(atom['params']['scale']/self.fs)**2*(-f)**2)
-			wigners = ((atom['params']['amplitude']/self.ptspmV)**2 * (2*np.pi)**0.5 * 
-						atom['params']['scale']/self.fs*exp1*exp2)
-			E += atom['params']['modulus']**2 * wigners
-		for atom in [atom for atom in atoms if atom['type']==10]:
-			amp =  atom['params']['modulus']**2*(atom['params']['amplitude']/self.ptspmV)**2
-			E[int(lent*atom['params']['t']/tpr)] +=  amp	
+		
+		for atom in (a for a in atoms if a['type'] == 13):
+			params = atom['params']
+			exp1 = np.exp(-2*(params['scale']/self.fs)**(-2)*(t-params['t']/self.fs)**2)
+			exp2 = np.exp(-2*np.pi**2 *(params['scale']/self.fs)**2*(params['f']*self.fs/2-f)**2)
+			wigners = ((params['amplitude']/self.ptspmV)**2 * 
+			           (2*np.pi)**0.5 * 
+				   params['scale'] / self.fs * exp1 * exp2)
+			E += params['modulus']**2 * wigners
+		
+		for atom in (a for a in atoms if a['type'] == 12):
+			params = atom['params']
+			amp = params['modulus']**2 * (params['amplitude']/self.ptspmV)**2
+			E[:,int(len(f)*params['f']/(2*np.pi))] +=  amp
+		
+		for atom in (atom for atom in atoms if atom['type'] == 11):
+			params = atom['params']
+			exp1 = np.exp(-2*(params['scale']/self.fs)**(-2)*(t-params['t']/self.fs)**2)
+			exp2 = np.exp(-2*np.pi**2 *(params['scale']/self.fs)**2*(-f)**2)
+			wigners = ((params['amplitude']/self.ptspmV)**2 * (2*np.pi)**0.5 * 
+						params['scale']/self.fs*exp1*exp2)
+			E += params['modulus']**2 * wigners
+		
+		for atom in (atom for atom in atoms if atom['type'] == 10):
+			params = atom['params']
+			amp =  (params['modulus'] ** 2) * (params['amplitude'] / self.ptspmV) ** 2
+			E[int(lent * params['t'] / tpr)] +=  amp	
+
 		signal_reconstruction = self._reconstruct_signal(atoms)
 		return t, f, E, sigt, signal, signal_reconstruction
 
-	def calculate_mean_map(self,df = 0.05, dt = 1/128., f_a = [0, 64.]):
+	def calculate_mean_map(self, df = 0.05, dt = 1.0/128.0, f_a = [0.0, 64.0]):
 		N = len(self.atoms.keys())
 		tpr = len(self.signals[1][0])
 		sigt = np.arange(0, tpr/self.fs, 1/self.fs)
 		for nr, chnl in enumerate(self.atoms.keys()):
-			print('calculating...',chnl,'of',len(self.atoms.keys()))
+			print('calculating...', chnl, 'of', len(self.atoms.keys()))
 			t, f, E, sigt_s,signal,signal_reconstruction = self._calculate_map(self.atoms[chnl],self.signals[1][nr],df,dt,f_a=f_a)
 			try:
 				signal_a += signal
@@ -216,3 +226,4 @@ class BookImporter(object):
 		ax2.axvline(x=4,color='r')
 		ax2.set_ylabel(u'Amplituda [$\\mu$V]')
 		ax2.set_xlabel(u'Czas [s]')
+
