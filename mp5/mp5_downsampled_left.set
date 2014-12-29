@@ -1,0 +1,27 @@
+# OBLIGATORY PARAMETERS
+
+nameOfDataFile         frags_left_downsampled.dat
+nameOfOutputDirectory  ./
+writingMode            CREATE
+samplingFrequency      128.0
+numberOfChannels       49
+selectedChannels       1-49
+numberOfSamplesInEpoch 1024
+selectedEpochs         1
+typeOfDictionary       OCTAVE_FIXED
+energyError            0.03 90.00
+randomSeed             auto
+reinitDictionary       NO_REINIT_AT_ALL
+maximalNumberOfIterations 200
+energyPercent             99.99999999
+MP                        SMP
+scaleToPeriodFactor       1.0
+pointsPerMicrovolt        1.0
+
+# ADDITIONAL PARAMETERS
+
+diracInDictionary         NO
+gaussInDictionary         NO
+sinCosInDictionary        YES
+gaborInDictionary         YES
+progressBar               ON
