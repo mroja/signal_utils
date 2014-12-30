@@ -11,8 +11,8 @@ START_DELAY = 10000
 
 PRESENTATION_TIME = 3000
 
-DELAY_MIN = 4500
-DELAY_MAX = 5000
+DELAY_MIN = 5000
+DELAY_MAX = 5500
 
 hands = NUM_R * ['r'] + NUM_L * ['l']
 random.shuffle(hands)
@@ -103,3 +103,4 @@ widget.showFullScreen()
 QTimer.singleShot(START_DELAY, start_procedure)
 
 sys.exit(app.exec_())
+
