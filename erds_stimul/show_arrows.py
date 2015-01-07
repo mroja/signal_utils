@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import sys
 import time
 import random
@@ -14,6 +17,9 @@ PRESENTATION_TIME = 3000
 DELAY_MIN = 5000
 DELAY_MAX = 5500
 
+INTRO_DURATION = 10000
+OUTRO_DURATION = 10000
+
 hands = NUM_R * ['r'] + NUM_L * ['l']
 random.shuffle(hands)
 hands_idx = -1
@@ -28,6 +34,28 @@ pixmap_l = QPixmap('arrow-left-green.png')
 widget = QWidget()
 label = QLabel(widget)
 square = QLabel(widget)
+intro_text = QLabel(widget)
+outro_text = QLabel(widget)
+
+intro_text.setText(u"""
+    <h1 style="font-size: 26px;">
+        Witaj na badaniu!
+    </h1>
+    <p>&nbsp;</p>
+    <p style="font-size: 22px;">
+        Na ekranie wyświetlana będzie strzałka wskazująca 
+        prawą lub lewą rękę. Po jej zgaśnięciu wykonaj 
+        ruch do góry dwoma palcami tej ręki: wskazującym 
+        i środkowym. Ruch wykonaj nie odrywając dłoni od 
+        stołu.
+    </p>
+    <p>&nbsp;</p>
+    <p style="font-size: 24px;">
+        Powodzenia!
+    </p>
+""")
+
+outro_text.setText(u"<h1 style=\"font-size: 26px;\">Dziękujemy za udział w badaniu.</h1>")
 
 
 def load_next_arrow():
@@ -66,13 +94,11 @@ def show_next_arrow():
     if load_next_arrow():
         QTimer.singleShot(PRESENTATION_TIME, wait_next)
     else:
-        print 'Finished'
-        QApplication.instance().quit()
+        show_outro()
 
 
 def start_procedure():
-    global widget, square, start_time
-    widget.setFocus(Qt.ActiveWindowFocusReason)
+    global widget, square, start_time 
     square.move(0, widget.height() - square.height())
     start_time = time.time()
     print time.strftime("%Y-%m-%d %H:%M:%S")
@@ -80,7 +106,29 @@ def start_procedure():
     show_next_arrow()
 
 
+def show_intro():
+    global widget, intro_text
+    widget.setFocus(Qt.ActiveWindowFocusReason)
+    margin = int(0.15 * widget.width())
+    intro_text.move(margin, 0)
+    intro_text.resize(widget.width() - 2 * margin, widget.height())
+    intro_text.show()
+    QTimer.singleShot(INTRO_DURATION + START_DELAY, start_procedure)
+    QTimer.singleShot(INTRO_DURATION, lambda: intro_text.hide())
+
+
+def show_outro():
+    print 'Finished'
+    outro_text.move(0, 0)
+    outro_text.resize(widget.width(), widget.height())
+    outro_text.show()    
+    QTimer.singleShot(OUTRO_DURATION, lambda: QApplication.instance().quit())
+
+
 label.setAlignment(Qt.AlignCenter)
+intro_text.setAlignment(Qt.AlignCenter)
+intro_text.setWordWrap(True) 
+outro_text.setAlignment(Qt.AlignCenter)
 
 layout = QVBoxLayout()
 layout.setSpacing(0)
@@ -97,10 +145,12 @@ square.setStyleSheet("QLabel { background-color: white; color: white; }")
 square.resize(50, 50)
 square.hide()
 
+intro_text.hide()
+outro_text.hide()
+
 widget.showFullScreen()
 #widget.show()
 
-QTimer.singleShot(START_DELAY, start_procedure)
+QTimer.singleShot(500, show_intro)
 
 sys.exit(app.exec_())
-
