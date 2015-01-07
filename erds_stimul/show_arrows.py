@@ -10,14 +10,13 @@ from PyQt4.QtCore import *
 NUM_R = 100
 NUM_L = 100
 
-START_DELAY = 10000
+START_DELAY = 5000
 
 PRESENTATION_TIME = 3000
 
 DELAY_MIN = 5000
 DELAY_MAX = 5500
 
-INTRO_DURATION = 10000
 OUTRO_DURATION = 10000
 
 hands = NUM_R * ['r'] + NUM_L * ['l']
@@ -28,21 +27,31 @@ start_time = None
 
 app = QApplication(sys.argv)
 
+intro_active = False
+
+class Window(QWidget):
+    def keyPressEvent(self, event):
+        global intro_active
+        #print 'key', event.key(), intro_active
+        if intro_active and event.key() == 32:
+            #print 'hiding intro'
+            hide_intro()
+
 pixmap_r = QPixmap('arrow-right-green.png')
 pixmap_l = QPixmap('arrow-left-green.png')
 
-widget = QWidget()
+widget = Window()
 label = QLabel(widget)
 square = QLabel(widget)
 intro_text = QLabel(widget)
 outro_text = QLabel(widget)
 
 intro_text.setText(u"""
-    <h1 style="font-size: 26px;">
+    <h1 style="font-size: 30px;">
         Witaj na badaniu!
     </h1>
     <p>&nbsp;</p>
-    <p style="font-size: 22px;">
+    <p style="font-size: 30px;">
         Na ekranie wyświetlana będzie strzałka wskazująca 
         prawą lub lewą rękę. Po jej zgaśnięciu wykonaj 
         ruch do góry dwoma palcami tej ręki: wskazującym 
@@ -50,7 +59,9 @@ intro_text.setText(u"""
         stołu.
     </p>
     <p>&nbsp;</p>
-    <p style="font-size: 24px;">
+    <p style="font-size: 30px;">Aby rozpocząć naciśnij spację.</p>
+    <p>&nbsp;</p>    
+    <p style="font-size: 30px;">
         Powodzenia!
     </p>
 """)
@@ -107,14 +118,25 @@ def start_procedure():
 
 
 def show_intro():
-    global widget, intro_text
+    global widget, intro_text, intro_active
     widget.setFocus(Qt.ActiveWindowFocusReason)
+    widget.activateWindow()
     margin = int(0.15 * widget.width())
     intro_text.move(margin, 0)
     intro_text.resize(widget.width() - 2 * margin, widget.height())
     intro_text.show()
-    QTimer.singleShot(INTRO_DURATION + START_DELAY, start_procedure)
-    QTimer.singleShot(INTRO_DURATION, lambda: intro_text.hide())
+    intro_active = True
+    # wait for key
+
+
+def hide_intro():
+    global intro_active
+    intro_active = False    
+    intro_text.hide()
+    p = widget.palette()
+    p.setColor(widget.backgroundRole(), Qt.gray)
+    widget.setPalette(p)
+    QTimer.singleShot(START_DELAY, start_procedure)
 
 
 def show_outro():
@@ -137,7 +159,7 @@ layout.addWidget(label)
 widget.setLayout(layout)
 widget.setAutoFillBackground(True)
 p = widget.palette()
-p.setColor(widget.backgroundRole(), Qt.gray)
+p.setColor(widget.backgroundRole(), Qt.white)
 widget.setPalette(p)
 widget.setWindowFlags(Qt.CustomizeWindowHint | Qt.WindowStaysOnTopHint)
 
