@@ -4,6 +4,7 @@
 import sys
 import time
 import random
+import datetime
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
@@ -19,6 +20,8 @@ DELAY_MAX = 5500
 
 OUTRO_DURATION = 10000
 
+TRIGGERS_FILE_NAME = 'triggers' # without .txt
+
 hands = NUM_R * ['r'] + NUM_L * ['l']
 random.shuffle(hands)
 hands_idx = -1
@@ -26,6 +29,10 @@ hands_idx = -1
 start_time = None
 
 app = QApplication(sys.argv)
+
+triggers_file = open(TRIGGERS_FILE_NAME + '.' + 
+                     datetime.datetime.now().isoformat() + 
+                     '.txt', 'w')
 
 intro_active = False
 
@@ -70,15 +77,17 @@ outro_text.setText(u"<h1 style=\"font-size: 26px;\">Dziękujemy za udział w bad
 
 
 def load_next_arrow():
-    global hands, hands_idx, pixmap_r, pixmap_l, label, square
+    global hands, hands_idx, pixmap_r, pixmap_l, label, square, triggers_file
     hands_idx += 1
     if hands_idx >= len(hands):
         return False
     if hands[hands_idx] == 'r':
         print 'right'
+        triggers_file.write('right' + '\n')
         label.setPixmap(pixmap_r)
     elif hands[hands_idx] == 'l':
         print 'left'
+        triggers_file.write('left' + '\n')
         label.setPixmap(pixmap_l)
     else:
         print 'error...'
@@ -90,7 +99,9 @@ def wait_next():
     global label, show_next_arrow, start_time
     curr_time = time.time()
     time_diff = curr_time - start_time
-    print 'hide %.12f %.12f' % (curr_time, time_diff)
+    msg = 'hide %.12f %.12f' % (curr_time, time_diff)
+    print msg
+    triggers_file.write(msg + '\n')
     label.setPixmap(QPixmap())
     square.hide()
     interval = random.randint(DELAY_MIN, DELAY_MAX)
@@ -98,10 +109,12 @@ def wait_next():
 
 
 def show_next_arrow():
-    global start_time
+    global start_time, triggers_file
     curr_time = time.time()
     time_diff = curr_time - start_time
-    print 'show %.12f %.12f' % (curr_time, time_diff)
+    msg = 'show %.12f %.12f' % (curr_time, time_diff)
+    print msg
+    triggers_file.write(msg + '\n')    
     if load_next_arrow():
         QTimer.singleShot(PRESENTATION_TIME, wait_next)
     else:
@@ -109,11 +122,12 @@ def show_next_arrow():
 
 
 def start_procedure():
-    global widget, square, start_time 
+    global widget, square, start_time, triggers_file
     square.move(0, widget.height() - square.height())
     start_time = time.time()
-    print time.strftime("%Y-%m-%d %H:%M:%S")
-    print 'start_time: %.12f' % (start_time,)
+    msg = time.strftime("%Y-%m-%d %H:%M:%S") + '\n' + ('start_time: %.12f' % (start_time,))
+    print msg
+    triggers_file.write(msg + '\n')    
     show_next_arrow()
 
 
@@ -140,7 +154,10 @@ def hide_intro():
 
 
 def show_outro():
-    print 'Finished'
+    global triggers_file
+    msg = 'The End.'
+    print msg
+    triggers_file.write(msg)    
     outro_text.move(0, 0)
     outro_text.resize(widget.width(), widget.height())
     outro_text.show()    
