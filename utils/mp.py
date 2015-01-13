@@ -14,11 +14,12 @@ def serialize_fragments(frags, file_name, downsampling_factor=1):
                      dtype='<f')
 
     for i in xrange(frags.T.shape[1]):
-        if downsample == True:
+        if downsampling_factor != 1:
             x[:,i] = ss.decimate(frags[i,:], downsampling_factor)
         else:
             x[:,i] = frags[i,:]
     
     with open(file_name, 'wb') as f:
         x.tofile(f)
+    print('Serialized array shape: ', x.shape)
 

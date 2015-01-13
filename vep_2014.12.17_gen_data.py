@@ -3,34 +3,13 @@
 
 from __future__ import division
 
+import utils
+
 from obci.analysis.obci_signal_processing import read_manager
 import matplotlib.pyplot as py
 import numpy as np
 import matplotlib.mlab as mlab
 import scipy.signal as ss
-
-def compute_specgram(signal,fs):
-    NFFT = int(fs)
-    w = ss.hamming(NFFT)
-    P,f,t = mlab.specgram(signal, NFFT=len(w), Fs=fs, window=w, noverlap=NFFT-1, sides='onesided')
-    extent = (t[0]-(NFFT/2)/fs,t[-1]+(NFFT/2)/fs,f[0],f[-1])
-    return P,f,t,extent
-
-def cwt(x,MinF,MaxF,Fs,w=7.0,df=0.5):
-    T = len(x)/Fs
-    M = len(x)
-    t = np.arange(0,T,1./Fs)
-    freqs = np.arange(MinF,MaxF,df)
-    P = np.zeros((len(freqs),M))
-    X = np.fft.fft(x)
-    for i,f in enumerate(freqs):
-        s = T*f/(2*w)
-        psi = np.fft.fft(ss.morlet(M, w=w, s=s, complete=True))
-        psi /= np.sqrt(np.sum(psi*psi.conj()))    
-        tmp = np.fft.fftshift(np.fft.ifft(X*psi))
-        P[i,:] = (tmp*tmp.conj()).real
-    extent = (0,T,MinF,MaxF)
-    return P,freqs,t,extent
 
 def find_triggers(mgr, tags, fs):
     triggers_w = []
@@ -47,25 +26,6 @@ def find_triggers(mgr, tags, fs):
             print tag['name']
             dupa()
     return triggers_w, triggers_g, triggers_r
-
-def cut_signal(signal,triggers,fs):
-    frags = np.zeros((len(triggers),int(1.25*fs)))
-    for i,trig in enumerate(triggers):
-        try:
-            frags[i,:] = signal[int(trig-0.25*fs):int(trig+1.0*fs)]
-        except ValueError:
-            pass
-    #frags[np.all(frags != 0,axis=1)]
-    return frags
-
-def compute_maps(frags,fs):
-    tf_maps = []
-    for frag in frags:
-        P,f,t,extent = compute_specgram(frag,fs)
-        # P,f,t,extent = cwt(frag,1,256,fs)
-        tf_maps.append(np.log(P+1))
-    P = np.mean(np.array(tf_maps),0)
-    return P,extent
 
 
 def preprocess_data(mgr, selected_channels_idx):
@@ -134,8 +94,8 @@ def plot_maps(P_left,P_right,extent):
     py.show()
 
 if __name__ == '__main__':
-    file_name_1 = 'data/aniaVEP_2014_Dec_17_1746.obci'
-    file_name_2 = 'data/aniaVEP2_2014_Dec_17_1754.obci'
+    file_name_1 = utils.get_data_path('vep_2014.12.17/aniaVEP_2014_Dec_17_1746.obci')
+    file_name_2 = utils.get_data_path('vep_2014.12.17/aniaVEP2_2014_Dec_17_1754.obci')
 
     channels = [
         u'F3', u'F1',
@@ -192,8 +152,8 @@ if __name__ == '__main__':
     print len(trig_2[0]), len(trig_2[1]), len(trig_2[2])
 
     channel_name = 'O1'
-    frags_1_w = cut_signal(mgr1.get_channel_samples(channel_name), trig_1[0], fs1)
-    frags_1_g = cut_signal(mgr1.get_channel_samples(channel_name), trig_1[1], fs1)
+    frags_1_w = utils.cut_signal(mgr1.get_channel_samples(channel_name), trig_1[0], int(0.25*fs1), int(1.0*fs1))
+    frags_1_g = utils.cut_signal(mgr1.get_channel_samples(channel_name), trig_1[1], int(0.25*fs1), int(1.0*fs1))
 
     frags_1_w_n = []
     frags_1_g_n = []
@@ -205,8 +165,8 @@ if __name__ == '__main__':
     frags_1_w = np.array(frags_1_w_n)
     frags_1_g = np.array(frags_1_g_n)
 
-    frags_2_w = cut_signal(mgr2.get_channel_samples(channel_name), trig_2[0], fs2)
-    frags_2_g = cut_signal(mgr2.get_channel_samples(channel_name), trig_2[1], fs2)
+    frags_2_w = utils.cut_signal(mgr2.get_channel_samples(channel_name), trig_2[0], int(0.25*fs2), int(1.0*fs2))
+    frags_2_g = utils.cut_signal(mgr2.get_channel_samples(channel_name), trig_2[1], int(0.25*fs2), int(1.0*fs2))
 
     frags_w = np.concatenate((frags_1_w, frags_2_w))
     frags_g = np.concatenate((frags_1_g, frags_2_g))
@@ -218,9 +178,11 @@ if __name__ == '__main__':
     py.plot(frags_w_avg)
     py.plot(frags_g_avg, 'r')
     py.show()
+    
+    # now fragments use 512 Hz sampling rate
 
-    serialize_data(frags_w, 'f_w.dat')
-    serialize_data(frags_g, 'f_g.dat')
+    utils.serialize_fragments(frags_w, 'vep/2014.12.17_f_w.dat', 4)
+    utils.serialize_fragments(frags_g, 'vep/2014.12.17_f_g.dat', 4)
 
     # mean_map_right_C3,extent = compute_maps(frags_right,fs)
     # mean_map_left_C4,extent = compute_maps(frags_left,fs)
