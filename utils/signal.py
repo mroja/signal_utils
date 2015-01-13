@@ -20,8 +20,8 @@ def cut_signal(signal, triggers, samples_before, samples_after=None):
     signal_length = len(signal)
     frags = []
     for i, trig in enumerate(triggers):
-        pos_from = int(trig - before)
-        pos_to = int(trig + after)
+        pos_from = int(trig - samples_before)
+        pos_to = int(trig + samples_after)
         if pos_from < 0:
             print('cut_signal: frag pos_from: {}, skipping...'.format(pos_from))
             continue

@@ -1,4 +1,6 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 from __future__ import division
 
 from obci.analysis.obci_signal_processing import read_manager

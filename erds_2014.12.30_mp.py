@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from book_reader import *
 
 if __name__ == '__main__':

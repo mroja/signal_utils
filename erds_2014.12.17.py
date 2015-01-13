@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import utils
 
@@ -96,9 +98,9 @@ if __name__ == '__main__':
     mode = 1
 
     if mode == 0:
-        file_name = './dane 17.XII.2014/ERD_ERS/ania1_2014_Dec_17_1625.obci' # prawa reka
+        file_name = utils.get_data_path('erds_2014.12.17/ania1_2014_Dec_17_1625.obci') # prawa reka
     elif mode == 1:
-        file_name = './dane 17.XII.2014/ERD_ERS/ania2_2014_Dec_17_1638.obci' # dwie rece
+        file_name = utils.get_data_path('erds_2014.12.17/ania2_2014_Dec_17_1638.obci') # dwie rece
     else:
         print 'bad hand'
         sys.exit()
@@ -133,12 +135,12 @@ if __name__ == '__main__':
     preprocess_data(mgr, channels_idx)
     filter_data(mgr, channels_idx, 5, 35)
 
-    hjorth_C1 = hjorth_montage(
+    hjorth_C1 = utils.hjorth_montage(
     	mgr.get_channel_samples('C1'), 
     	mgr.get_channels_samples(['C3', 'Cz', 'FC1', 'CP1'])
     )
 
-    hjorth_C2 = hjorth_montage(
+    hjorth_C2 = utils.hjorth_montage(
     	mgr.get_channel_samples('C2'), 
     	mgr.get_channels_samples(['C4', 'Cz', 'FC2', 'CP2'])
     )
@@ -157,10 +159,10 @@ if __name__ == '__main__':
 
     before = 4
     after = 5
-    frags = cut_signal(hjorth_C1, triggers, before, after, fs)
+    frags = utils.cut_signal(hjorth_C1, triggers, int(before*fs), int(after*fs))
 
     print 'Computing maps...'
-    mean_map, extent = compute_maps(frags, fs)
+    mean_map, extent = utils.compute_maps(frags, fs)
 
     py.figure()
     py.imshow(mean_map, aspect='auto', origin='lower', extent=extent)
