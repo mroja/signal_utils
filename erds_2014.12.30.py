@@ -3,34 +3,13 @@
 
 from __future__ import division
 
+import utils
+
 from obci.analysis.obci_signal_processing import read_manager
 import matplotlib.pyplot as py
 import numpy as np
 import matplotlib.mlab as mlab
 import scipy.signal as ss
-
-def compute_specgram(signal,fs):
-	NFFT = int(fs)
-	w = ss.hamming(NFFT)
-	P,f,t = mlab.specgram(signal, NFFT=len(w), Fs=fs, window=w, noverlap=NFFT-1, sides='onesided')
-	extent = (t[0]-(NFFT/2)/fs,t[-1]+(NFFT/2)/fs,f[0],f[-1])
-	return P,f,t,extent
-
-def cwt(x,MinF,MaxF,Fs,w=7.0,df=0.5):
-	T = len(x)/Fs
-	M = len(x)
-	t = np.arange(0,T,1./Fs)
-	freqs = np.arange(MinF,MaxF,df)
-	P = np.zeros((len(freqs),M))
-	X = np.fft.fft(x)
-	for i,f in enumerate(freqs):
-		s = T*f/(2*w)
-		psi = np.fft.fft(ss.morlet(M, w=w, s=s, complete=True))
-		psi /= np.sqrt(np.sum(psi*psi.conj()))    
-		tmp = np.fft.fftshift(np.fft.ifft(X*psi))
-		P[i,:] = (tmp*tmp.conj()).real
-	extent = (0,T,MinF,MaxF)
-	return P,freqs,t,extent
 
 def preprocess_data(mgr):
 	sig = mgr.get_samples()
@@ -41,9 +20,6 @@ def preprocess_data(mgr):
 		sig[i] = sig[i]*float(pointsPerMikroV[i])
 		sig[i] = ss.filtfilt(b,a,sig[i])
 	mgr.set_samples(sig,mgr.get_param('channels_names'))
-
-def hjorth_montage(chosen_channel,montage_channels):
-	return chosen_channel - 0.25*(sum(montage_channels,0))
 
 def find_blinks(diode):
 	moments = np.where(diode>50000)[0]
@@ -106,15 +82,6 @@ def cut_signal(signal,triggers,fs):
 	frags[np.all(frags != 0,axis=1)]
 	return frags
 
-def compute_maps(frags,fs):
-	tf_maps = []
-	for frag in frags:
-		P,f,t,extent = compute_specgram(frag,fs)
-		# P,f,t,extent = cwt(frag,1,256,fs)
-		tf_maps.append(np.log(P+1))
-	P = np.mean(np.array(tf_maps),0)
-	return P,extent
-
 def load_data(file_name):
 	mgr = read_manager.ReadManager(file_name+'.xml',
 								   file_name+'.raw',
@@ -124,10 +91,10 @@ def load_data(file_name):
 	emg_right = mgr.get_channel_samples('EMGR')
 	diode = mgr.get_channel_samples('TRIG')	
 	preprocess_data(mgr)
-	hjorth_C3 = hjorth_montage(mgr.get_channel_samples('C3'),mgr.get_channels_samples(['FC3','C1','C5','CP3']))
-	hjorth_C4 = hjorth_montage(mgr.get_channel_samples('C4'),mgr.get_channels_samples(['C6','C2','FC4','CP4']))
-	hjorth_CP1 = hjorth_montage(mgr.get_channel_samples('CP1'),mgr.get_channels_samples(['CP3','C1','CPz','P1']))
-	hjorth_CP2 = hjorth_montage(mgr.get_channel_samples('CP2'),mgr.get_channels_samples(['CP4','C2','CPz','P2']))
+	hjorth_C3 = utils.hjorth_montage(mgr.get_channel_samples('C3'),mgr.get_channels_samples(['FC3','C1','C5','CP3']))
+	hjorth_C4 = utils.hjorth_montage(mgr.get_channel_samples('C4'),mgr.get_channels_samples(['C6','C2','FC4','CP4']))
+	hjorth_CP1 = utils.hjorth_montage(mgr.get_channel_samples('CP1'),mgr.get_channels_samples(['CP3','C1','CPz','P1']))
+	hjorth_CP2 = utils.hjorth_montage(mgr.get_channel_samples('CP2'),mgr.get_channels_samples(['CP4','C2','CPz','P2']))
 	return emg_left,emg_right,hjorth_C3,hjorth_C4,diode,fs,hjorth_CP1,hjorth_CP2
 
 def serialize_data(frags,file_name,downsample=True):
@@ -165,17 +132,17 @@ def plot_maps(P_left,P_right,extent):
 	py.show()
 
 if __name__ == '__main__':
-	emg_left,emg_right,hjorth_C3,hjorth_C4,diode,fs,hjorth_CP1,hjorth_CP2 = load_data('./Data_30-12-14/30-12-14_alex_01')
+	emg_left,emg_right,hjorth_C3,hjorth_C4,diode,fs,hjorth_CP1,hjorth_CP2 = load_data(utils.get_data_path('erds_2014.12.30/30-12-14_alex_01'))
 
-	trig_left,trig_right = find_triggers(emg_left,emg_right,diode,'./Data_30-12-14/trigger.txt',fs)
+	trig_left,trig_right = find_triggers(emg_left,emg_right,diode,utils.get_data_path('erds_2014.12.30/trigger.txt'),fs)
 	frags_right = cut_signal(hjorth_C3,trig_right,fs)
 	frags_left = cut_signal(hjorth_C4,trig_left,fs)
 
 	# serialize_data(frags_right,'C3_right_downsampled.dat')
 	# serialize_data(frags_left,'C4_left_downsampled.dat')
 
-	# mean_map_right_C3,extent = compute_maps(frags_right,fs)
-	# mean_map_left_C4,extent = compute_maps(frags_left,fs)
+	mean_map_right_C3,extent = utils.compute_maps(frags_right,fs)
+	mean_map_left_C4,extent = utils.compute_maps(frags_left,fs)
 
-	# plot_maps(mean_map_left_C4,mean_map_right_C3,extent)
+	plot_maps(mean_map_left_C4,mean_map_right_C3,extent)
 
