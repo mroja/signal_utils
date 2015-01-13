@@ -1,11 +1,11 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, division
-import numpy as np
-import collections
-import sys
+
 import os
+import sys
+import collections
+import numpy as np
 import matplotlib.pyplot as py
 import matplotlib.gridspec as gridspec
 from scipy.signal import filtfilt, butter
@@ -225,8 +225,7 @@ class BookImporter(object):
         E_a /= N
         return t, f, E_a, sigt, signal_a, signal_reconstruction_a
 
-    def draw_map(
-            self, 
+    def draw_map(self, 
             t, f, E_a, 
             sigt, signal_a,
             signal_recontruction_a,
@@ -252,3 +251,4 @@ class BookImporter(object):
         ax2.axvline(x=4, color='r')
         ax2.set_ylabel(u'Amplituda [$\\mu$V]')
         ax2.set_xlabel(u'Czas [s]')
+
