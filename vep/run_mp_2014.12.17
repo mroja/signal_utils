@@ -1,0 +1,24 @@
+#!/bin/bash
+
+rm -rf *.b
+
+../utils/mp5-amd64 -f 2014.12.17_f_g_mmp1.set
+mv 2014.12.17_f_g_mmp.b 2014.12.17_f_g_mmp1.b
+
+../utils/mp5-amd64 -f 2014.12.17_f_g_mmp2.set
+mv 2014.12.17_f_g_mmp.b 2014.12.17_f_g_mmp2.b
+
+../utils/mp5-amd64 -f 2014.12.17_f_g_mmp3.set
+mv 2014.12.17_f_g_mmp.b 2014.12.17_f_g_mmp3.b
+
+
+
+../utils/mp5-amd64 -f 2014.12.17_f_w_mmp1.set
+mv 2014.12.17_f_w_mmp.b 2014.12.17_f_w_mmp1.b
+
+../utils/mp5-amd64 -f 2014.12.17_f_w_mmp2.set
+mv 2014.12.17_f_w_mmp.b 2014.12.17_f_w_mmp2.b
+
+../utils/mp5-amd64 -f 2014.12.17_f_w_mmp3.set
+mv 2014.12.17_f_w_mmp.b 2014.12.17_f_w_mmp3.b
+
