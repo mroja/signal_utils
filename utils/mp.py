@@ -21,5 +21,5 @@ def serialize_fragments(frags, file_name, downsampling_factor=1):
     
     with open(file_name, 'wb') as f:
         x.tofile(f)
-    print('Serialized array shape: ', x.shape)
+    print('Serialized array shape ({}): '.format(file_name), x.shape)
 
