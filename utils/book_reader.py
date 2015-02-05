@@ -18,9 +18,8 @@ class BookImporter(object):
                 book_file 				-- string -- book file
         """
         super(BookImporter, self).__init__()
-
-        f = open(book_file, 'rb')
-        self.data, self.signals, self.atoms, self.epoch_s = self._read_book(f)
+        with open(book_file, 'rb') as f:
+            self.data, self.signals, self.atoms, self.epoch_s = self._read_book(f)
         self.fs = self.data[5]['Fs']
         self.ptspmV = self.data[5]['ptspmV']
 
@@ -88,10 +87,6 @@ class BookImporter(object):
         return atoms, a_chnl_nr
 
     def _read_book(self, f):
-        try:
-            f = open(f, 'rb')
-        except Exception:
-            f = f
         version = np.fromfile(f, 'S6', count=1)
         data = {}
         ident = np.fromfile(f, 'u1', count=1)[0]
