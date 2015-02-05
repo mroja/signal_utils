@@ -20,16 +20,12 @@ class BookImporter(object):
         Input:
                 book_file 				-- string -- book file
         """
-
         super(BookImporter, self).__init__()
 
         f = open(book_file, 'rb')
-        data, signals, atoms, epoch_s = self._read_book(f)
-        self.epoch_s = epoch_s
-        self.atoms = atoms
-        self.signals = signals
-        self.fs = data[5]['Fs']
-        self.ptspmV = data[5]['ptspmV']
+        self.data, self.signals, self.atoms, self.epoch_s = self._read_book(f)
+        self.fs = self.data[5]['Fs']
+        self.ptspmV = self.data[5]['ptspmV']
 
     def _get_type(self, ident, f):
         if ident == 1:

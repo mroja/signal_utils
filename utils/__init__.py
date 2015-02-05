@@ -7,6 +7,7 @@ import numpy as np
 from .maps import compute_maps
 from .signal import hjorth_montage, cut_signal
 from .mp import serialize_fragments
+from .book_reader import BookImporter
 
 
 def get_data_path(file_name=''):
