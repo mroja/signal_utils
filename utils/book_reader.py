@@ -2,13 +2,10 @@
 
 from __future__ import print_function, division
 
-import os
-import sys
 import collections
 import numpy as np
 import matplotlib.pyplot as py
 import matplotlib.gridspec as gridspec
-from scipy.signal import filtfilt, butter
 
 
 class BookImporter(object):
@@ -232,7 +229,7 @@ class BookImporter(object):
         
         ax1 = fig.add_subplot(gs[0])
         ax1.set_ylabel(u'Czestosc [Hz]')
-        ax1.set_title(sys.argv[-1])
+        #ax1.set_title(sys.argv[-1])
         
         if contour:
             ax1.contour(t, f, E_a)
