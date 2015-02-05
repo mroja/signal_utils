@@ -1,0 +1,241 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=windows-1250">
+	<TITLE>Untitled Document</TITLE>
+	<META NAME="GENERATOR" CONTENT="OpenOffice.ux.pl 2.0  (Win32)">
+	<META NAME="CREATED" CONTENT="20060214;16201077">
+	<META NAME="CHANGEDBY" CONTENT="Jarosław Żygierewicz">
+	<META NAME="CHANGED" CONTENT="20060215;11465103">
+	<STYLE>
+	<!--
+		TD P.style1 { color: #0000ff; font-weight: bold }
+	-->
+	</STYLE>
+</HEAD>
+<BODY LANG="en-US" DIR="LTR">
+<DL>
+	<DL>
+		<DL>
+			<DD>
+			<TABLE WIDTH=799 BORDER=1 CELLPADDING=4 CELLSPACING=3 FRAME=VOID RULES=GROUPS STYLE="page-break-before: always">
+				<COLGROUP>
+					<COL WIDTH=88>
+					<COL WIDTH=39>
+					<COL WIDTH=36>
+				</COLGROUP>
+				<COLGROUP>
+					<COL WIDTH=542>
+					<COL WIDTH=36>
+				</COLGROUP>
+				<TR>
+					<TD WIDTH=88>
+						<P>&nbsp;</P>
+					</TD>
+					<TD ROWSPAN=14 COLSPAN=4 WIDTH=686>
+						<H1 ALIGN=CENTER>Step 1 
+						</H1>
+						<P ALIGN=CENTER><IMG SRC="pierwszy.png" NAME="grafika1" ALIGN=BOTTOM WIDTH=660 HEIGHT=399 BORDER=0></P>
+					</TD>
+				</TR>
+				<TR>
+					<TD WIDTH=88>
+						<P>&nbsp;</P>
+					</TD>
+				</TR>
+				<TR>
+					<TD WIDTH=88>
+						<P>&nbsp;</P>
+					</TD>
+				</TR>
+				<TR>
+					<TD WIDTH=88>
+						<P>&nbsp;</P>
+					</TD>
+				</TR>
+				<TR>
+					<TD WIDTH=88>
+						<P>&nbsp;</P>
+					</TD>
+				</TR>
+				<TR>
+					<TD WIDTH=88>
+						<P>&nbsp;</P>
+					</TD>
+				</TR>
+				<TR>
+					<TD WIDTH=88>
+						<P><BR>
+						</P>
+					</TD>
+				</TR>
+				<TR>
+					<TD WIDTH=88>
+						<P ALIGN=CENTER><A HREF="glowna.htm" TARGET="_top">main</A></P>
+					</TD>
+				</TR>
+				<TR>
+					<TD WIDTH=88>
+						<P ALIGN=CENTER><A HREF="ekran1.htm">step 1</A></P>
+					</TD>
+				</TR>
+				<TR>
+					<TD WIDTH=88 HEIGHT=25>
+						<P ALIGN=CENTER><A HREF="ekran2.htm">step 2</A></P>
+					</TD>
+				</TR>
+				<TR>
+					<TD WIDTH=88>
+						<P ALIGN=CENTER><A HREF="ekran3.htm">step 3</A></P>
+					</TD>
+				</TR>
+				<TR>
+					<TD WIDTH=88>
+						<P ALIGN=CENTER><A HREF="ekran4.htm">step 4</A></P>
+					</TD>
+				</TR>
+				<TR>
+					<TD WIDTH=88>
+						<P ALIGN=CENTER><A HREF="ekran5.htm">step 5</A></P>
+					</TD>
+				</TR>
+				<TR>
+					<TD ROWSPAN=2 WIDTH=88>
+						<P><BR>
+						</P>
+					</TD>
+				</TR>
+				<TR>
+					<TD ROWSPAN=4 WIDTH=39 VALIGN=TOP></TD>
+					<TD ROWSPAN=2 COLSPAN=2 WIDTH=589>
+						<P CLASS="style1" ALIGN=LEFT STYLE="margin-bottom: 0.5cm">Screen
+						1</P>
+						<P ALIGN=LEFT STYLE="margin-bottom: 0.5cm">In this step you
+						select the files and directries to work with and the method for
+						estimation of time-frequency energy density.</P>
+						<P CLASS="style1" ALIGN=LEFT STYLE="margin-bottom: 0.5cm">Fields:</P>
+						<UL>
+							<LI><P ALIGN=LEFT STYLE="margin-bottom: 0.5cm">data file &ndash;
+							file with raw data in case of SP and CWT estimators of energy
+							density, in case of MP estimator data file contains results of
+							Matching Pursuit decomposition. The MP decomposition must be
+							run priori to the time-frequency analysis. MP software is
+							avialable from <A HREF="http://eeg.pl/mp">eeg.pl</A> &nbsp; 
+							</P>
+						</UL>
+						<UL>
+							<LI><P ALIGN=LEFT STYLE="margin-bottom: 0.5cm">montage file &ndash;
+							file describing topographical locations of electrodes. 
+                            Currently there are two formats aviable: 
+                            rectagular grid *.mtg and general 2D grid *.s2d.<br>
+                            Rectangular montage is described in a
+							text *.mtg  with the following format:</P>
+						</UL>
+						<UL>
+							<UL>
+								<LI><P ALIGN=LEFT STYLE="margin-bottom: 0.5cm">each line
+								describes one electrode 
+								</P>
+								<LI><P ALIGN=LEFT STYLE="margin-bottom: 0.5cm">a line
+								contains three numbers and a string with the following
+								meaning:</P>
+							
+						<UL>
+							
+									<LI>number of the electrode in the multichannel data 
+									<LI>horizontal									position 
+									</P>
+									<LI><P ALIGN=LEFT STYLE="margin-bottom: 0.5cm">vertical
+									position 
+									</P>
+									<LI><P ALIGN=LEFT STYLE="margin-bottom: 0.5cm">label</P>
+								
+						</UL>
+</UL>
+						
+The general 2D format is a text file:
+<ul>
+<li>1st line contains two numbers specifing width and height of a single
+    subplot
+<li> the following lines consist of a number specifing:
+<ul>
+<li> channel number in the file
+<li>  next two numbers are the X and Y position of the sensor 
+<li> the last element is a string with a title for the subplot
+</ul>
+</ul>
+</UL>
+						<UL>
+							<LI><P ALIGN=LEFT>read raw data &ndash; a file containing user
+							defined matlab function for reading data. The function is
+							expected to return a matrix NxL where N is the numer of trials
+							and L is the number of samples per single trial. 
+							</P>
+						</UL>
+					</TD>
+					<TD ROWSPAN=4 WIDTH=36 VALIGN=TOP></TD>
+				</TR>
+				<TR>
+					<TD ROWSPAN=4 WIDTH=88 VALIGN=TOP></TD>
+				</TR>
+				<TR VALIGN=TOP>
+					<TD WIDTH=36></TD>
+					<TD WIDTH=542>
+						<P ALIGN=LEFT>Example:<BR><SPAN LANG="pl-PL"><FONT SIZE=2><FONT FACE="Arial, sans-serif">function
+						data=read_data(c) <FONT COLOR="#00ae00">% c is the config
+						structure <BR>% prepared with the
+						GUI</FONT><BR>file_name=sprintf('%s%d',c.data_file,c.current_channel);<BR><FONT COLOR="#00ae00">%
+						c.data_file &ndash; a field in the config structure containning
+						<BR>% string with the name of the data file<BR>%
+						c.current_channel &ndash; number of channel being
+						analyzed</FONT><BR>fid=fopen(file_name,'rb');<BR>d=fread(fid,[<SPAN LANG="pl-PL"><FONT SIZE=2>c.N,</FONT></SPAN>c.dimBase],'float32');
+						% c.N - numer of trials<BR><FONT COLOR="#00ae00">% c.dimBase -
+						number of samples per single trial</FONT><BR>fclose(fid);</FONT></FONT></SPAN>&nbsp;
+												</P>
+					</TD>
+				</TR>
+				<TR>
+					<TD COLSPAN=2 WIDTH=589>
+						<UL>
+							<LI><P ALIGN=LEFT STYLE="margin-bottom: 0.5cm">output
+							directory &ndash; directory in which the generated figures
+							will be stored&nbsp; 
+							</P>
+						</UL>
+						<UL>
+							<LI><P ALIGN=LEFT STYLE="margin-bottom: 0.5cm">base name &ndash;
+							first part of the name common to all generated fiures &nbsp; 
+							</P>
+						</UL>
+						<UL>
+							<LI><P ALIGN=LEFT STYLE="margin-bottom: 0.5cm">map type &ndash;
+							method for estimation of the time-frequency distribution of
+							energy density of the signal. The options are: 
+							</P>
+							<UL>
+								<LI><P ALIGN=LEFT STYLE="margin-bottom: 0.5cm">SP -
+								spectogram 
+								</P>
+								<LI><P ALIGN=LEFT STYLE="margin-bottom: 0.5cm">CWT -
+								scalogram (Contineous Wavelet Transform) 
+								</P>
+								<LI><P ALIGN=LEFT>MP &ndash; estimator computed from matching
+								pursiut decomposition. &nbsp; 
+								</P>
+							</UL>
+						</UL>
+					</TD>
+				</TR>
+				<TR>
+					<TD COLSPAN=4 WIDTH=686>
+						<P ALIGN=CENTER>&nbsp;</P>
+					</TD>
+				</TR>
+			</TABLE>
+		</DL>
+	</DL>
+</DL>
+<P><BR><BR>
+</P>
+</BODY>
+</HTML>

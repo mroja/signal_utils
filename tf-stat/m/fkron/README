@@ -1,0 +1,45 @@
+A replacement fast mex routine for the kronecker product.
+=========================================================
+
+The routine fkron.c replaces the m-file kron.m.
+It produces the kronecker product of matrices of any size, full or sparse.  
+
+The call is 	
+
+>>	C=fkron(A,B) 
+
+The resulting matrix C is sparse if either of A or B is sparse.
+
+This routine is somewhat faster than the m-file, especially if compiled
+with a good optimizing compiler.
+
+Installation
+============
+
+%	cmex -O3 CC=gcc fkron.c
+	
+Or your favorite combination of C compiler and optimizing options.
+
+Then move the resulting file called fkron.{ext}, where {ext} depends
+on your machine architecture, to a directory on your MATLABPATH.
+
+Then, in MATLAB, try a simple test like 
+
+>>	test_fkron		% from the supplied test_fkron.m
+
+or a more comprehensive exercise like 
+
+>>	bigtime_fkron(10,13)	% from the supplied bigtime_fkron.m
+
+The latter will make sure the compiled code executes correctly and
+will give you an estimate of the increase in speed you can expect,
+as a factor of the matrix size and sparsity.
+
+The author would like to receive your comments.
+
+======= Serge G. Kruk ====================================================
+        Graduate student                        sgkruk@barrow.uwaterloo.ca
+        Combinatorics & Optimization
+        Faculty of Mathematics
+======= University of Waterloo ===========================================
+		

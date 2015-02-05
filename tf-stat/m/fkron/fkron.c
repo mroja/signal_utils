@@ -1,0 +1,283 @@
+/*Module************************************************************
+ *
+ * Fast Kronecker product C routine functionally equivalent to kron.m
+ *
+ * Serge G. Kruk 1995.06.21
+ * Dept. of Combinatorics & Optimization
+ * University of Waterloo
+ * Waterloo, Canada
+ * sgkruk@barrow.uwaterloo.ca
+ *
+ * MATLAB syntax : M = fkron(A,B)
+ * The returned matrix M is sparse if either A or B is sparse.
+ * It is full if both A and B are full.
+ *
+ * Caveat: Not optimal code.  Written for clarity, not speed.
+ * But since this code is between 10 and 100 times faster than
+ * the m-file, it should be enough for most applications.
+ * Moreover, there is no sure way to optimize C code across all
+ * machine architecture.  (In gcc I trust.)
+ *
+ * Tested on : OSF1 V1.3 111 alpha "gcc -O3" "cc -O2"
+ *             SunOS 4.1.3_U1 1 sun4c "gcc -O3" "cc -O3"
+ *
+ * Some results. (To be taken with large grains of salt.)
+ * Time are in seconds, from bigtime_fkron(10,13).
+ * Matrix size : 1   2   3   4   5    6    7    8    9   10   11   12    13
+ * kron        :3.2 5.1 5.9 6.3 9.3 13.4 18.3 27.9 35.6 52.3 67.9 99.7 118.8
+ * fkron       :0.1 0.2 0.2 0.2 0.2  0.3  0.4  0.8  0.7  1.2  1.1  1.7   2.0
+ **********************************************************************/
+#include "mex.h"
+/*Function************************************************************
+ *
+ * fkron_sparse(mxArray *A, mxArray *B)
+ *
+ * Both A and B are sparses matrices.  The returned matrix is sparse.
+ *
+ *********************************************************************/
+#ifdef __STDC__
+static mxArray *fkron_sparse(const mxArray *A, const mxArray *B)
+#else
+static mxArray *fkron_sparse(A, B)
+     mxArray *A;
+     mxArray *B;
+#endif
+{
+  register int i,j,k,l,index;	/* General-purpose loop variables. */
+  register int A_i,A_j,B_i,B_j,C_i,C_j;
+  mxArray *C;			/* Returned matrix. */
+  int A_nzmax,B_nzmax,C_nzmax;	/* Maximum number of non-zeros. */
+  int A_m,A_n,B_m,B_n,C_m,C_n;	/* Size of matrices. */
+  int *A_ir,*A_jc,*B_ir,*B_jc;	/* Row and column non-zero entry indices. */
+  int *C_ir,*C_jc;
+  double *A_pr,*B_pr,*C_pr;	/* The actual matrix entries. */
+  A_ir=mxGetIr(A);		/* Get row entries. */
+  A_jc=mxGetJc(A);		/* Get column entries */
+  B_ir=mxGetIr(B);		/* Get row entries. */
+  B_jc=mxGetJc(B);		/* Get column entries */
+
+  A_m=mxGetM(A);A_n=mxGetN(A);	/* Get size of A. */
+  B_m=mxGetM(B);B_n=mxGetN(B);	/* Get size of B. */
+  C_m=A_m*B_m;C_n=A_n*B_n;	/* Size of C. */
+
+  C_nzmax=A_jc[A_n]*B_jc[B_n];	/* Number of nonzeros in result. */
+  C=mxCreateSparse(C_m,C_n,C_nzmax,mxREAL);
+
+  A_pr=mxGetPr(A);		/* Actual entries. */
+  B_pr=mxGetPr(B);		/* Actuel entries. */
+
+  C_pr=mxGetPr(C);
+  C_ir=mxGetIr(C);		/* Get row entries. */
+  C_jc=mxGetJc(C);		/* Get column entries */
+
+  for(index=0,C_j=0,A_j=0; A_j<A_n; A_j++){ /* For each column of A. */
+    for(B_j=0; B_j<B_n; B_j++){	/* For each column of B. */
+      for(;C_j<=(A_j)*B_n+B_j;C_j++) /* Update the vector of columns. */
+	C_jc[C_j]=index;
+      for(k=A_jc[A_j]; k<A_jc[A_j+1]; k++){ /* For each row of A. */
+	A_i=A_ir[k];
+	for(l=B_jc[B_j]; l<B_jc[B_j+1]; l++){ /* For each row of B. */
+	  B_i=B_ir[l];
+	  C_i=(A_i)*B_m+B_i;
+	  C_pr[index]=A_pr[k]*B_pr[l];
+	  C_ir[index++]=C_i;
+	}
+      }
+    }
+  }
+  C_jc[C_j]=index;	/* NOTICE: C_j here points _past_ column. */
+  return C;
+}
+/*Function************************************************************
+ *
+ * fkron_sparse_full(mxArray *A, mxArray *B)
+ * 
+ * mxArray A is sparse.  mxArray B is full.
+ * The returned matrix is sparse and uses space equal to B being 
+ * completely non-zero.
+ * 
+ *********************************************************************/
+
+static mxArray *fkron_sparse_full(const mxArray *A, const mxArray *B)
+{
+  register int i,j,k,l,index;	/* General-purpose loop variables. */
+  register int A_i,A_j,B_i,B_j,C_i,C_j;
+  mxArray *C;			/* Returned matrix. */
+  int A_nzmax,B_nzmax,C_nzmax;	/* Maximum number of non-zeros. */
+  int A_m,A_n,B_m,B_n,C_m,C_n;	/* Size of matrices. */
+  int *A_ir,*A_jc;		/* Row and column non-zero entry indices. */
+  int *C_ir,*C_jc;
+  double *A_pr,*B_pr,*C_pr;	/* The actual matrix entries. */
+  A_ir=mxGetIr(A);		/* Get row entries. */
+  A_jc=mxGetJc(A);		/* Get column entries */
+  
+  A_m=mxGetM(A);A_n=mxGetN(A);	/* Get size of A. */
+  B_m=mxGetM(B);B_n=mxGetN(B);	/* Get size of B. */
+  C_m=A_m*B_m;C_n=A_n*B_n;	/* Size of C. */
+
+  C_nzmax=A_jc[A_n]*B_m*B_n;	/* Number of nonzeros in result. */
+  C=mxCreateSparse(C_m,C_n,C_nzmax,mxREAL);
+
+  A_pr=mxGetPr(A);		/* Actual entries. */
+  B_pr=mxGetPr(B);		/* Actuel entries. */
+
+  C_pr=mxGetPr(C);
+  C_ir=mxGetIr(C);		/* Get row entries. */
+  C_jc=mxGetJc(C);		/* Get column entries */
+
+  for(index=0,C_j=0,A_j=0; A_j<A_n; A_j++){ /* For each column of A. */
+    for(B_j=0; B_j<B_n; B_j++){	/* For each column of B. */
+      for(;C_j<=(A_j)*B_n+B_j;C_j++) /* Update the vector of columns. */
+	C_jc[C_j]=index;
+      for(k=A_jc[A_j]; k<A_jc[A_j+1]; k++){ /* For each row of A. */
+	A_i=A_ir[k];
+	for(j=B_j*B_m,B_i=0; B_i<B_m; B_i++,j++){ /* For each row of B. */
+	  C_i=(A_i)*B_m+B_i;
+	  if ((C_pr[index]=A_pr[k]*B_pr[j])==0) 
+	    continue;
+	  C_ir[index++]=C_i;
+	}
+      }
+    }
+  }
+  C_jc[C_j]=index;	/* NOTICE: C_j here points _past_ column. */
+  return C;
+}
+/*Function************************************************************
+ *
+ * fkron_full_sparse(mxArray *A, mxArray *B)
+ * 
+ * mxArray A is full.  mxArray B is sparse
+ * The returned matrix is sparse and uses space equal to A being 
+ * completely non-zero.
+ *
+ *********************************************************************/
+#ifdef __STDC__
+static mxArray *fkron_full_sparse(const mxArray *A, const mxArray *B)
+#else
+static mxArray *fkron_full_sparse(A, B)
+     mxArray *A;
+     mxArray *B;
+#endif
+{
+  register int i,j,k,l,index;	/* General-purpose loop variables. */
+  register int A_i,A_j,B_i,B_j,C_i,C_j;
+  mxArray *C;			/* Returned matrix. */
+  int B_nzmax,C_nzmax;		/* Maximum number of non-zeros. */
+  int A_m,A_n,B_m,B_n,C_m,C_n;	/* Size of matrices. */
+  int *B_ir,*B_jc;		/* Row and column non-zero entry indices. */
+  int *C_ir,*C_jc;
+  double *A_pr,*B_pr,*C_pr;	/* The actual matrix entries. */
+  B_ir=mxGetIr(B);		/* Get row entries. */
+  B_jc=mxGetJc(B);		/* Get column entries */
+  
+  A_m=mxGetM(A);A_n=mxGetN(A);	/* Get size of A. */
+  B_m=mxGetM(B);B_n=mxGetN(B);	/* Get size of B. */
+  C_m=A_m*B_m;C_n=A_n*B_n;	/* Size of C. */
+
+  C_nzmax=A_m*A_n*B_jc[B_n];	/* (maximum) Number of nonzeros in result. */
+  C=mxCreateSparse(C_m,C_n,C_nzmax,mxREAL);
+
+  A_pr=mxGetPr(A);		/* Actual entries. */
+  B_pr=mxGetPr(B);		/* Actuel entries. */
+
+  C_pr=mxGetPr(C);
+  C_ir=mxGetIr(C);		/* Get row entries. */
+  C_jc=mxGetJc(C);		/* Get column entries */
+
+  for(index=0,C_j=0,A_j=0; A_j<A_n; A_j++){ /* For each column of A. */
+    for(B_j=0; B_j<B_n; B_j++){	/* For each column of B. */
+      for(;C_j<=(A_j)*B_n+B_j;C_j++) /* Update the vector of columns. */
+	C_jc[C_j]=index;
+      for(i=A_j*A_m,A_i=0; A_i<A_m; A_i++,i++){ /* For each row of A. */
+	for(l=B_jc[B_j]; l<B_jc[B_j+1]; l++){ /* For each row of B. */
+	  B_i=B_ir[l];
+	  C_i=(A_i)*B_m+B_i;
+	  if ((C_pr[index]=A_pr[i]*B_pr[l])==0)
+	    continue;
+	  C_ir[index++]=C_i;
+	}
+      }
+    }
+  }
+
+  C_jc[C_j]=index;	/* NOTICE: C_j here points _past_ column. */
+  return C;
+}
+/*Function************************************************************
+ *
+ * fkron_full(mxArray *A, mxArray *B)
+ * 
+ * Both A and B are full matrices.  The returned matrix is full.
+ *
+ *********************************************************************/
+
+static mxArray *fkron_full(const mxArray *A, const mxArray *B)
+{
+  register int i,j,index;	/* General-purpose loop variables. */
+  int A_i,A_j,B_i,B_j;		/* Row and Column indices of A abd B. */
+  mxArray *C;			/* Returned matrix. */
+  int A_m,A_n,B_m,B_n,C_m,C_n;	/* Size of matrices. */
+  double *A_pr,*B_pr,*C_pr;	/* The actual matrix entries. */
+
+  A_m=mxGetM(A);A_n=mxGetN(A);	/* Get size of A. */
+  B_m=mxGetM(B);B_n=mxGetN(B);	/* Get size of B. */
+  C_m=A_m*B_m;C_n=A_n*B_n;	/* Size of C. */
+
+  C=mxCreateDoubleMatrix(C_m,C_n,mxREAL);	/* Allocate space for result. */
+
+  A_pr=mxGetPr(A);		/* Actual entry ventor. */
+  B_pr=mxGetPr(B);		/* Actuel entry vector. */
+
+  C_pr=mxGetPr(C);		/* Actual entry vector */
+  /* The real index into A_pr is i. */
+  for(index=0,A_j=0; A_j<A_n; A_j++){ /* For each column of A. */
+    for(B_j=0; B_j<B_n; B_j++){ /* For each column of B. */
+      for(i=A_j*A_m,A_i=0; A_i<A_m; A_i++,i++){ /* For each row of A. */
+	for(j=B_j*B_m,B_i=0; B_i<B_m; B_i++,j++){ /* For each row of B. */
+	  C_pr[index++]=A_pr[i]*B_pr[j];
+	}
+      }
+    }
+  }
+  return C;
+}
+/*Function************************************************************
+ *
+ * mexFunction
+ *
+ * The entry point, described and copied from MATLAB documentation.
+ * It validates the input parameters then calls the appropriate function.
+ *
+ * It is certainly possible to merge the four previous functions
+ * into one, at the expense of a some tests in the inside loops.
+ * But since the smallest mex file is about 16K on both architectures
+ * I used to test this routine, I did not see the point of doing that
+ * improvement.
+ *********************************************************************/
+
+void mexFunction(
+	int		nlhs,
+	mxArray	*plhs[],
+	int		nrhs,
+	const mxArray	*prhs[]
+	)
+
+{
+  if (nrhs != 2)
+    mexErrMsgTxt("fkron requires two input arguments.");
+  else {
+    /* We have two parameters. */
+    if (!mxIsSparse(prhs[0]))
+      if  (!mxIsSparse(prhs[1]))
+	plhs[0]=fkron_full(prhs[0],prhs[1]);
+      else
+	plhs[0]=fkron_full_sparse(prhs[0],prhs[1]);
+    else if (mxIsSparse(prhs[0]))
+      if (mxIsSparse(prhs[1]))
+	plhs[0]=fkron_sparse(prhs[0],prhs[1]);
+      else
+	plhs[0]=fkron_sparse_full(prhs[0],prhs[1]);
+  }
+  return;
+}

@@ -11,6 +11,7 @@ import numpy as np
 import matplotlib.mlab as mlab
 import scipy.signal as ss
 
+
 def preprocess_data(mgr):
 	sig = mgr.get_samples()
 	fs = float(mgr.get_param('sampling_frequency'))
@@ -21,6 +22,7 @@ def preprocess_data(mgr):
 		sig[i] = ss.filtfilt(b,a,sig[i])
 	mgr.set_samples(sig,mgr.get_param('channels_names'))
 
+
 def find_blinks(diode):
 	moments = np.where(diode>50000)[0]
 	start = []
@@ -30,6 +32,7 @@ def find_blinks(diode):
 			start.append(moments[i])
 	return np.array(start)
 
+
 def load_stimuli_file(f_name):
 	stimuli = []
 	with open(f_name,'r') as f:
@@ -38,6 +41,7 @@ def load_stimuli_file(f_name):
 			if stimulus == 'right' or stimulus == 'left':
 				stimuli.append(stimulus)
 	return stimuli
+
 
 def find_triggers(emg_left,emg_right,diode,triggers_file,fs):
 	b,a = ss.butter(2, 3.0/(fs*0.5), btype="highpass")
@@ -72,6 +76,7 @@ def find_triggers(emg_left,emg_right,diode,triggers_file,fs):
 	# py.show()
 	return np.array(trig_left), np.array(trig_right)
 
+
 def cut_signal(signal,triggers,fs):
 	frags = np.zeros((len(triggers),int(8*fs)))
 	for i,trig in enumerate(triggers):
@@ -82,11 +87,13 @@ def cut_signal(signal,triggers,fs):
 	frags[np.all(frags != 0,axis=1)]
 	return frags
 
+
 def load_data(file_name):
 	mgr = read_manager.ReadManager(file_name+'.xml',
 								   file_name+'.raw',
 								   file_name+'.tag')
 	fs = float(mgr.get_param('sampling_frequency'))
+	print 'Sampling rate: ', fs
 	emg_left = mgr.get_channel_samples('EMGL')
 	emg_right = mgr.get_channel_samples('EMGR')
 	diode = mgr.get_channel_samples('TRIG')	
@@ -97,7 +104,8 @@ def load_data(file_name):
 	hjorth_CP2 = utils.hjorth_montage(mgr.get_channel_samples('CP2'),mgr.get_channels_samples(['CP4','C2','CPz','P2']))
 	return emg_left,emg_right,hjorth_C3,hjorth_C4,diode,fs,hjorth_CP1,hjorth_CP2
 
-def serialize_data(frags,file_name,downsample=True):
+
+def serialize_data(frags,file_name,downsample=False):
 	if downsample == True:
 		x = np.zeros([frags.shape[1]/4,frags.shape[0]], dtype='<f')
 	else:	
@@ -107,8 +115,10 @@ def serialize_data(frags,file_name,downsample=True):
 			x[:,i] = ss.decimate(frags[i,:],4)
 		else:
 			x[:,i] = frags[i,:]
+	print 'Serialized data shape: ', x.shape
 	with open(file_name,'wb') as f:
 		x.tofile(f)
+
 
 def plot_maps(P_left,P_right,extent):
 	py.figure(figsize=(18,10),dpi=80)
@@ -138,11 +148,9 @@ if __name__ == '__main__':
 	frags_right = cut_signal(hjorth_C3,trig_right,fs)
 	frags_left = cut_signal(hjorth_C4,trig_left,fs)
 
-	# serialize_data(frags_right,'C3_right_downsampled.dat')
-	# serialize_data(frags_left,'C4_left_downsampled.dat')
+	utils.serialize_fragments_tfstats(frags_right, 'C3_r.dat')
+	utils.serialize_fragments_tfstats(frags_left, 'C4_l.dat')
 
 	mean_map_right_C3,extent = utils.compute_maps(frags_right,fs)
 	mean_map_left_C4,extent = utils.compute_maps(frags_left,fs)
-
 	plot_maps(mean_map_left_C4,mean_map_right_C3,extent)
-
