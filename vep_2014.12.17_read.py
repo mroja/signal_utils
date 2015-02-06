@@ -37,18 +37,37 @@ if __name__ == '__main__':
         b.signals[1][90][1] - sygnał
     '''
 
-    if 0:
-        b = b_w
+    if 1:
+        #b = b_w
         b = b_g
+
+        mean_signal = np.zeros(b.signals[1][0][1].shape)
+        for curr_id in b.atoms.keys():
+            print curr_id
+            signal = b.signals[1][curr_id-1][1]
+            mean_signal += signal
+        mean_signal /= len(b.atoms.keys())
+
         for curr_id in b.atoms.keys():
             print curr_id
             signal = b.signals[1][curr_id-1][1]
             atoms = b.atoms[curr_id]
 
+            trigger = int(0.25 * 128)
+
+            py.figure()
+
+            py.subplot(3, 1, 1)
+            py.axvline(trigger, color='r')
+            py.plot(mean_signal)
+
+            py.subplot(3, 1, 2)
+            py.axvline(trigger, color='r')
             py.plot(signal)
+            py.plot(b._reconstruct_signal(atoms))
 
-            atoms[1]['params']['amplitude']
-
+            py.subplot(3, 1, 3)
+            py.axvline(trigger, color='r')
             for atom in atoms[:4]:
                 if atom['type'] != 13:
                     print 'unknown atom type:', atom['type']
@@ -57,7 +76,10 @@ if __name__ == '__main__':
                 atom_reconstruction = atom2signal_gabor(b, atom)
                 py.plot(atom_reconstruction)
             
-            py.show()
+            #py.show()
+            py.savefig('out/141217_trig_{}.png'.format(curr_id))
+
+            py.close()
     else:
         ampl_w = []
         ampl_g = []
