@@ -2,23 +2,22 @@
 
 from __future__ import print_function, division
 
-import collections
 import numpy as np
 import matplotlib.pyplot as py
 import matplotlib.gridspec as gridspec
 
 
 class BookImporter(object):
+    """
+    Class for reading books from mp5 decomposition.
 
-    def __init__(self, book_file):
-        """
-        Class for reading books from mp5 decomposition.
+    Input:
+        book_file_name -- string -- book file
+    """
 
-        Input:
-                book_file 				-- string -- book file
-        """
+    def __init__(self, book_file_name):
         super(BookImporter, self).__init__()
-        with open(book_file, 'rb') as f:
+        with open(book_file_name, 'rb') as f:
             self.data, self.signals, self.atoms, self.epoch_s = self._read_book(f)
         self.fs = self.data[5]['Fs']
         self.ptspmV = self.data[5]['ptspmV']
@@ -48,7 +47,6 @@ class BookImporter(object):
             return np.dtype([('percent', '>f4'), ('maxiterations', '>u4'),
                              ('dict_size', '>u4'), ('dict_type', '>S1')])
         elif ident == 10:  # dirac
-            # return
             atom_s = np.fromfile(f, '>u1', count=1)[0]
             return np.dtype([('modulus', '>f4'), ('amplitude', '>f4'),
                              ('t', '>f4')])
@@ -88,11 +86,12 @@ class BookImporter(object):
 
     def _read_book(self, f):
         version = np.fromfile(f, 'S6', count=1)
+        print('version: {}'.format(version))
         data = {}
         ident = np.fromfile(f, 'u1', count=1)[0]
         ct = self._get_type(ident, f)
-        signals = collections.defaultdict(list)
-        atoms = collections.defaultdict(list)
+        signals = dict()
+        atoms = dict()
         while ident:
             if ct:
                 point = np.fromfile(f, ct, count=1)[0]
@@ -103,7 +102,10 @@ class BookImporter(object):
                 epoch_s = np.fromfile(f, '>u4', count=1)[0]
             elif ident == 8:
                 chnl_nr, signal = self._get_signal(f, epoch_nr, epoch_s)
-                signals[epoch_nr].append(signal)
+                if epoch_nr not in signals:
+                    signals[epoch_nr] = list()
+                #signals[epoch_nr].append(signal)
+                signals[epoch_nr].append([chnl_nr, signal])
             elif ident == 9:
                 pl = f.tell()
                 atom, a_chnl_nr = self._get_atoms(f)
@@ -119,12 +121,13 @@ class BookImporter(object):
         width = scale
         frequency = 2.0 * np.pi * afrequency
         signal = amplitude * \
-            np.exp(-np.pi * ((time - position) / width) ** 2) * np.cos(frequency * (time - position) + phase)
+            np.exp(-np.pi * ((time - position) / width) ** 2) * \
+            np.cos(frequency * (time - position) + phase)
         return signal
 
     def _sinus(self, amplitude, frequency, phase):
         time = np.linspace(0, self.epoch_s / self.fs, self.epoch_s)
-        frequency = frequency * 2 * np.pi
+        frequency = 2.0 * np.pi * frequency 
         signal = amplitude * np.cos(frequency * time + phase)
         return signal
 
@@ -240,3 +243,31 @@ class BookImporter(object):
         ax2.set_ylabel(u'Amplituda [$\\mu$V]')
         ax2.set_xlabel(u'Czas [s]')
 
+    # from old file...
+    def draw_mean_reconstructed_signal(self, atoms, signals):
+        N = len(atoms.keys())
+        tpr = len(signals[1][0][1])
+        t = np.arange(0, tpr/self.fs, 1/self.fs)
+        for i,trial in enumerate(atoms.keys()):
+            signal_reconstruction = self.reconstruct_signal_freq(atoms[trial])
+            signal = signals[1][i][1]
+            try:
+                signal_a += signal
+                signal_reconstruction_a += signal_reconstruction
+            except Exception as a:
+                print(a, 'objection')
+                signal_a = signal
+                signal_reconstruction_a = signal_reconstruction
+        signal_a /= N
+        signal_reconstruction_a /= N
+        py.figure('Mean')
+        t = np.linspace(-0.5, 1, tpr)
+        py.plot(t,signal_reconstruction_a,color='g',label='rekonstrukcja')
+        py.plot(t,signal_a,color='m',label=u'sygnał')
+        # py.ylim(-4,8)
+        py.xlim(-0.1,1)
+        py.ylabel(u'Amplituda [$\\mu$V]')
+        py.xlabel(u'Czas [s]')
+        py.axvline(x=0,color='r')
+        # py.axvline(x=0.3,color='r')
+        # py.legend()
