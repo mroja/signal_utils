@@ -9,7 +9,7 @@ def serialize_fragments(frags, file_name, downsampling_factor=1):
     if downsampling_factor == 1:
         x = np.zeros(frags.T.shape, dtype='<f')
     else:
-        x = np.zeros((frags.shape[1] / downsampling_factor, 
+        x = np.zeros((round(frags.shape[1] / downsampling_factor), 
                       frags.shape[0]), 
                      dtype='<f')
 

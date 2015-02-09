@@ -6,13 +6,13 @@ writingMode            CREATE
 samplingFrequency      128.0
 numberOfChannels       99
 selectedChannels       1-99
-numberOfSamplesInEpoch 96
+numberOfSamplesInEpoch 77
 selectedEpochs         1
 typeOfDictionary       OCTAVE_FIXED
 energyError            0.03 90.00
 randomSeed             auto
 reinitDictionary       NO_REINIT_AT_ALL
-maximalNumberOfIterations 200
+maximalNumberOfIterations 50
 energyPercent             99.99999999
 MP                        MMP3
 scaleToPeriodFactor       1.0

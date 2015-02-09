@@ -152,8 +152,8 @@ if __name__ == '__main__':
     print len(trig_2[0]), len(trig_2[1]), len(trig_2[2])
 
     channel_name = 'O1'
-    frags_1_w = utils.cut_signal(mgr1.get_channel_samples(channel_name), trig_1[0], int(0.25*fs1), int(0.5*fs1))
-    frags_1_g = utils.cut_signal(mgr1.get_channel_samples(channel_name), trig_1[1], int(0.25*fs1), int(0.5*fs1))
+    frags_1_w = utils.cut_signal(mgr1.get_channel_samples(channel_name), trig_1[0], int(0.1*fs1), int(0.5*fs1))
+    frags_1_g = utils.cut_signal(mgr1.get_channel_samples(channel_name), trig_1[1], int(0.1*fs1), int(0.5*fs1))
 
     frags_1_w_n = []
     frags_1_g_n = []
@@ -165,8 +165,8 @@ if __name__ == '__main__':
     frags_1_w = np.array(frags_1_w_n)
     frags_1_g = np.array(frags_1_g_n)
 
-    frags_2_w = utils.cut_signal(mgr2.get_channel_samples(channel_name), trig_2[0], int(0.25*fs2), int(0.5*fs2))
-    frags_2_g = utils.cut_signal(mgr2.get_channel_samples(channel_name), trig_2[1], int(0.25*fs2), int(0.5*fs2))
+    frags_2_w = utils.cut_signal(mgr2.get_channel_samples(channel_name), trig_2[0], int(0.1*fs2), int(0.5*fs2))
+    frags_2_g = utils.cut_signal(mgr2.get_channel_samples(channel_name), trig_2[1], int(0.1*fs2), int(0.5*fs2))
 
     frags_w = np.concatenate((frags_1_w, frags_2_w))
     frags_g = np.concatenate((frags_1_g, frags_2_g))
