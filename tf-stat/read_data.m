@@ -7,8 +7,9 @@ function data = read_data(c) % c is the config structure
 
     % c.dimBase - number of samples per single trial
     % c.N - numer of trials
-    d = fread(fid, [c.dimBase, c.N], 'float64');
-    data = transpose(d);
+    d = fread(fid, [c.N, c.dimBase], 'float64');
+    data = d; % transpose(d);
 
     fclose(fid);
 end
+

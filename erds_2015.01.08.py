@@ -16,6 +16,11 @@ import numpy as np
 import matplotlib.mlab as mlab
 import scipy.signal as ss
 
+
+# !!! SETTINGS
+what = 0 # 0 - bez przygotowania, 1 - z przygotowaniem
+
+
 def compute_specgram(signal,fs):
     NFFT = int(fs)
     w = ss.hamming(NFFT)
@@ -115,15 +120,27 @@ def find_triggers(emg_left,emg_right,diode,tags,fs):
     return np.array(trig_left), np.array(trig_right)
 
 def cut_signal(signal,triggers,fs):
-    frags = np.zeros((len(triggers),int(9*fs)/4))
-    for i,trig in enumerate(triggers):
-        try:
-            x = signal[int(trig-5*fs):int(trig+4*fs)]
-            frags[i,:] = ss.decimate(x,4)
-        except ValueError:
-            pass
-    frags[np.all(frags != 0,axis=1)]
-    return frags
+    global what
+    if what == 0:
+        frags = np.zeros((len(triggers),int(7*fs)/4))
+        for i,trig in enumerate(triggers):
+            try:
+                x = signal[int(trig-3*fs):int(trig+4*fs)]
+                frags[i,:] = ss.decimate(x,4)
+            except ValueError:
+                pass
+        frags[np.all(frags != 0,axis=1)]
+        return frags
+    else: 
+        frags = np.zeros((len(triggers),int(8*fs)/4))
+        for i,trig in enumerate(triggers):
+            try:
+                x = signal[int(trig-4*fs):int(trig+4*fs)]
+                frags[i,:] = ss.decimate(x,4)
+            except ValueError:
+                pass
+        frags[np.all(frags != 0,axis=1)]
+        return frags
 
 def compute_maps(frags,fs):
     tf_maps = []
@@ -142,6 +159,7 @@ def load_data(file_name):
                 u'C4',u'C6',u'CP5',u'CP3',u'CP1',u'CPz',u'CP2',u'CP4',u'CP6',u'P1',u'P2',u'A1',u'A2',u'EMGL',u'EMGR',u'TRIG']
     mgr.set_param('channels_names',channels)
     fs = float(mgr.get_param('sampling_frequency'))
+    #print 'Sampling rate:', fs
     emg_left = mgr.get_channel_samples('EMGL')
     emg_right = mgr.get_channel_samples('EMGR')
     diode = mgr.get_channel_samples('TRIG') 
@@ -188,10 +206,14 @@ def plot_maps(P_left,P_right,extent):
     py.show()
 
 def plot_maps_expanded(P_left_C3,P_left_C4,P_right_C3,P_right_C4,extent):
+    global what
     py.figure(figsize=(18,10),dpi=80)
     py.subplot(221)
     im = py.imshow(P_left_C3,aspect='auto',origin='lower',extent=extent)
-    py.axvline(x=2,color='r')
+    if what == 0:
+        py.axvline(x=3,color='r')
+    else:
+        py.axvline(x=4,color='r')
     py.colorbar(im, pad=0.05)
     py.ylabel(u'częstość [Hz]')
     py.xlabel('czas [s]')
@@ -199,14 +221,20 @@ def plot_maps_expanded(P_left_C3,P_left_C4,P_right_C3,P_right_C4,extent):
     py.ylim(0,40)
     py.subplot(222)
     im2 = py.imshow(P_left_C4,aspect='auto',origin='lower',extent=extent)
-    py.axvline(x=2,color='r')
+    if what == 0:
+        py.axvline(x=3,color='r')
+    else:
+        py.axvline(x=4,color='r')
     py.xlabel('czas [s]')
     py.title('C4 lewa')
     py.ylim(0,40)
     py.colorbar(im2, pad=0.05)
     py.subplot(223)
     im = py.imshow(P_right_C3,aspect='auto',origin='lower',extent=extent)
-    py.axvline(x=2,color='r')
+    if what == 0:
+        py.axvline(x=3,color='r')
+    else:
+        py.axvline(x=4,color='r')
     py.colorbar(im, pad=0.05)
     py.ylabel(u'częstość [Hz]')
     py.xlabel('czas [s]')
@@ -214,7 +242,10 @@ def plot_maps_expanded(P_left_C3,P_left_C4,P_right_C3,P_right_C4,extent):
     py.ylim(0,40)
     py.subplot(224)
     im = py.imshow(P_right_C4,aspect='auto',origin='lower',extent=extent)
-    py.axvline(x=2,color='r')
+    if what == 0:
+        py.axvline(x=3,color='r')
+    else:
+        py.axvline(x=4,color='r')
     py.colorbar(im, pad=0.05)
     py.ylabel(u'częstość [Hz]')
     py.xlabel('czas [s]')
@@ -233,14 +264,22 @@ def tag_writer(times, filename):
     writer.finish_saving(0.0)
 
 if __name__ == '__main__':
-    emg_left,emg_right,hjorth_C3,hjorth_C4,diode,fs,hjorth_CP1,hjorth_CP2,tags = load_data(utils.get_data_path('erds_2015.02.14/alex2_2015_Jan_27_1313.obci'))
+    if what == 0:
+        emg_left,emg_right,hjorth_C3,hjorth_C4,diode,fs,hjorth_CP1,hjorth_CP2,tags = load_data(utils.get_data_path('erds_2015.02.14/alex2_2015_Jan_27_1313.obci'))
+    else:
+        emg_left,emg_right,hjorth_C3,hjorth_C4,diode,fs,hjorth_CP1,hjorth_CP2,tags = load_data(utils.get_data_path('erds_2015.02.14/alex1_2015_Jan_27_1252.obci'))
+
     trig_left,trig_right = find_triggers(emg_left,emg_right,diode,tags,fs)
     frags_right_C3_1 = cut_signal(hjorth_C3,trig_right,fs)
     frags_left_C4_1 = cut_signal(hjorth_C4,trig_left,fs)
     frags_right_C4_1 = cut_signal(hjorth_C4,trig_right,fs)
     frags_left_C3_1 = cut_signal(hjorth_C3,trig_left,fs)
 
-    emg_left,emg_right,hjorth_C3,hjorth_C4,diode,fs,hjorth_CP1,hjorth_CP2,tags = load_data(utils.get_data_path('erds_2015.02.14/alex2_2015_Jan_27_1355.obci'))
+    if what == 0:
+        emg_left,emg_right,hjorth_C3,hjorth_C4,diode,fs,hjorth_CP1,hjorth_CP2,tags = load_data(utils.get_data_path('erds_2015.02.14/alex2_2015_Jan_27_1355.obci'))
+    else:
+        emg_left,emg_right,hjorth_C3,hjorth_C4,diode,fs,hjorth_CP1,hjorth_CP2,tags = load_data(utils.get_data_path('erds_2015.02.14/alex1_2015_Jan_27_1338.obci'))
+
     trig_left,trig_right = find_triggers(emg_left,emg_right,diode,tags,fs)
     frags_right_C3_2 = cut_signal(hjorth_C3,trig_right,fs)
     frags_left_C4_2 = cut_signal(hjorth_C4,trig_left,fs)
@@ -259,10 +298,18 @@ if __name__ == '__main__':
     # d['right'] = trig_right/fs
     # tag_writer(d,'30-12-14_alex_01')
 
-    utils.serialize_fragments_tfstats(frags_right_C3, 'frags_right_C3.dat')
-    utils.serialize_fragments_tfstats(frags_left_C4, 'frags_left_C4.dat')
-    utils.serialize_fragments_tfstats(frags_right_C4, 'frags_right_C4.dat')
-    utils.serialize_fragments_tfstats(frags_left_C3, 'frags_left_C3.dat')
+    print 'Final sampling rate:', new_fs
+
+    if what == 0:
+        utils.serialize_fragments_tfstats(frags_right_C3, 'frags_right_C3_nprep.dat')
+        utils.serialize_fragments_tfstats(frags_left_C4, 'frags_left_C4_nprep.dat')
+        utils.serialize_fragments_tfstats(frags_right_C4, 'frags_right_C4_nprep.dat')
+        utils.serialize_fragments_tfstats(frags_left_C3, 'frags_left_C3_nprep.dat')
+    else:
+        utils.serialize_fragments_tfstats(frags_right_C3, 'frags_right_C3_prep.dat')
+        utils.serialize_fragments_tfstats(frags_left_C4, 'frags_left_C4_prep.dat')
+        utils.serialize_fragments_tfstats(frags_right_C4, 'frags_right_C4_prep.dat')
+        utils.serialize_fragments_tfstats(frags_left_C3, 'frags_left_C3_prep.dat')
 
     mean_map_right_C3,extent = compute_maps(frags_right_C3,new_fs)
     mean_map_left_C4,extent = compute_maps(frags_left_C4,new_fs)
@@ -272,4 +319,3 @@ if __name__ == '__main__':
     plot_maps_expanded(np.sqrt(np.log(mean_map_left_C3+1)),np.sqrt(np.log(mean_map_left_C4+1)),np.sqrt(np.log(mean_map_right_C3+1)),np.sqrt(np.log(mean_map_right_C4+1)),extent)
 
     # plot_maps(mean_map_right_C4,mean_map_right_C3,extent)
-
